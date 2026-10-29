@@ -262,8 +262,10 @@ export function scanRelease(files: ReadonlyArray<{ path: string; bytes: Uint8Arr
         const readings = latin1 === undefined ? [text] : [text, latin1];
         findings.push(...new Set(readings.flatMap((reading) => instructionFindings(path, reading, skipSyntax))));
       }
-      // UTF-16 interleaves NULs, so its secrets only match in the decoded text.
-      if (utf16Order !== null && text !== null) secrets = secretsInText(text);
+      // UTF-16 interleaves NULs, so its secrets only match in the decoded text. The raw
+      // bytes are scanned too: ASCII behind a UTF-16 BOM decodes to valid CJK and would
+      // otherwise hide a plain-byte secret.
+      if (utf16Order !== null && text !== null) secrets = new Set([...secretsInText(text), ...secretsInBytes(bytes)]);
     }
     for (const name of secrets ?? secretsInBytes(bytes)) findings.push(`danger:secret-${name}:${path}`);
   }

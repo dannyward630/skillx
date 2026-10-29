@@ -87,6 +87,12 @@ describe("release scan", () => {
     ]);
   });
 
+  it("still finds a plain-byte secret behind a UTF-16 BOM", () => {
+    expect(scanRelease([{ path: "x.reg", bytes: bytes([0xff, 0xfe], AWS) }]).findings).toEqual([
+      "danger:secret-aws-access-key-id:x.reg",
+    ]);
+  });
+
   it("quarantines malformed UTF-16 (lone surrogate)", () => {
     const bad = utf16("ab");
     bad.set([0x00, 0xd8], 2); // lone high surrogate
